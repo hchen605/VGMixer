@@ -252,29 +252,36 @@ def flanger(data, freq, dry=0.5, wet=0.5, depth=20.0, delay=1.0, rate=44100):
 
 if __name__=='__main__':
     
+    #parameters
     flanger_en = 1
-    chorus_en = 0
+    chorus_en = 1
     samplerate = 44100
     
     #read MIDI notes
-    k = ks(44100, 220)
+    note = [220, 247, 261]
+    dur = [330, 110, 500]
+    audio = np.empty(1)
+    
+    
+    for i in range(len(note)):
+        k = ks(samplerate, note[i])
 
-    k.set_factor(1)
-    #  参数取值为0到1，产生不同音色。为0.5时为鼓音色，1时为拨弦音色
-    k.generator(330) #110 ~ 60bpm 1/8
+        k.set_factor(1)
+        #  参数取值为0到1，产生不同音色。为0.5时为鼓音色，1时为拨弦音色
+        k.generator(dur[i]) #110 ~ 60bpm 1/8
     
-    audio = k.block
+        audio_tmp = k.block
     
-    if flanger_en:
-        audio = flanger(k.block, 220)
+        if flanger_en:
+            audio_tmp = flanger(audio_tmp, note[i])
     
-    if chorus_en:
-        audio = chorus(audio, 220)
+        if chorus_en:
+            audio_tmp = chorus(audio_tmp, note[i])
     
-    if flanger_en == 0 and chorus_en == 0:
-        audio = k.block
+        audio = np.append(audio, audio_tmp)
     
     
+    """    
     k = ks(44100, 247)
 
     k.generator(110)
@@ -297,6 +304,7 @@ if __name__=='__main__':
     else:
         audio= np.append(audio, k.block)
     
+    """ 
     
     write('hh.wav', samplerate, audio.astype(np.int16))
     
