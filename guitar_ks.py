@@ -9,9 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as ss
 import wave
-#import pyaudio
-from scipy.io.wavfile import write
 from scipy.io.wavfile import read 
+import pretty_midi
+
 
 class ks(object):
   '''  Generate sound wave using Karplus-Strong Algorithm.
@@ -191,7 +191,7 @@ def generate_wave_input(freq, length, rate=44100, phase=0.0):
         Courtesy of threepineapples:
           https://code.google.com/p/python-musical/issues/detail?id=2
     '''
-    length = int(length * rate)
+    length = np.ceil(length * rate)
     t = np.arange(length) / float(rate)
     omega = float(freq) * 2 * np.pi
     phase *= 2 * np.pi  
@@ -203,7 +203,9 @@ def sine(freq, length, rate=44100, phase=0.0):
         at a rate of 'rate'. The 'phase' of the wave is the percent (0.0 to 1.0)
         into the wave that it starts on.
     '''
+
     data = generate_wave_input(freq, length, rate, phase)
+
     return np.sin(data)
 
 def modulated_delay(data, modwave, dry, wet):
@@ -248,21 +250,11 @@ def flanger(data, freq, dry=0.5, wet=0.5, depth=20.0, delay=1.0, rate=44100):
     delay *= mil
     depth *= mil
     modwave = (sine(freq, length) / 2 + 0.5) * depth + delay
+
     return feedback_modulated_delay(data, modwave, dry, wet)
 
-if __name__=='__main__':
-    
-    #parameters
-    flanger_en = 1
-    chorus_en = 1
-    samplerate = 44100
-    
-    #read MIDI notes
-    note = [220, 247, 261]
-    dur = [330, 110, 500]
+def synthesize_notes(note, dur, flanger_en=True, chorus_en=True, samplerate=44100):
     audio = np.empty(1)
-    
-    
     for i in range(len(note)):
         k = ks(samplerate, note[i])
 
@@ -279,36 +271,6 @@ if __name__=='__main__':
             audio_tmp = chorus(audio_tmp, note[i])
     
         audio = np.append(audio, audio_tmp)
+    return audio
     
-    
-    """    
-    k = ks(44100, 247)
 
-    k.generator(110)
-
-    if flanger_en:
-        audio = np.append(audio, flanger(k.block, 247))
-    elif chorus_en:
-        audio = np.append(audio, chorus(k.block, 247))
-    else:
-        audio= np.append(audio, k.block)
-        
-    #print(audio)
-    k = ks(44100, 261)
-    k.generator(500)
-
-    if flanger_en:
-        audio = np.append(audio, flanger(k.block, 261))
-    elif chorus_en:
-        audio = np.append(audio, chorus(k.block, 261))
-    else:
-        audio= np.append(audio, k.block)
-    
-    """ 
-    
-    write('hh.wav', samplerate, audio.astype(np.int16))
-    
-    #audio = flanger(audio, )
-    
-  
-    
