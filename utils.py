@@ -7,6 +7,7 @@ Created on Apr 16 16:28:20 2021
 import numpy as np
 import pretty_midi
 from scipy.io.wavfile import write
+import soundfile as sf
 
 
 def load_midi(midi_path):
@@ -25,4 +26,4 @@ def load_midi(midi_path):
 
 
 def write_audio(oup_path, samplerate, audio):
-    write(oup_path, samplerate, audio)
+    sf.write(oup_path, audio, samplerate)

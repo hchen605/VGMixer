@@ -68,7 +68,7 @@ class ks(object):
     Args:
       length: the number of chunks that build up a block
     '''
-    print('Generating...')
+    #print('Generating...')
     self.block = self.chunk
     self.total_len = length * self.period + len(self.chunk)
     for i in range(length-1):
@@ -76,7 +76,7 @@ class ks(object):
       self.block = np.append(self.block, self.chunk)
     # convert the result from float to int
     self.__convert_to_int16()
-    print('Done. %s frames for total.' % self.total_len)
+    #print('Done. %s frames for total.' % self.total_len)
     return self.block
 
 

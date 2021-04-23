@@ -33,28 +33,40 @@ import sys, wave
 import numpy as np
 from numpy import array, int16
 from scipy.signal import lfilter, butter
-from scipy.io.wavfile import read,write
+from scipy.io.wavfile import read, write
 from scipy import signal
+from scipy.signal import convolve
+import librosa
 
 
 class AudioProcessing(object):
 
 	__slots__ = ('audio_data', 'sample_freq')
 
-	def __init__(self, input_audio_path):
-		self.sample_freq, self.audio_data = read(input_audio_path)
-		self.audio_data = AudioProcessing.convert_to_mono_audio(self.audio_data)
+	def __init__(self, input_audio=None):
+		if type(input_audio) is str:
+			self.audio_data, self.sample_freq = librosa.load(input_audio, sr=44100)
+		elif type(input_audio) is list:
+			self.sample_freq, self.audio_data = input_audio
+		else:
+			raise "Please pass either input audio or audio path for this function."
+		
+		if len(self.audio_data.shape) == 2:
+			self.audio_data = AudioProcessing.convert_to_mono_audio(self.audio_data)
 
 	def save_to_file(self, output_path):
+		print('save_file')
 		'''Writes a WAV file representation of the processed audio data'''
 		write(output_path, self.sample_freq, array(self.audio_data, dtype = int16))
 
 	def set_audio_speed(self, speed_factor):
+		print('set speed')
 		'''Sets the speed of the audio by a floating-point factor'''
 		sound_index = np.round(np.arange(0, len(self.audio_data), speed_factor))
 		self.audio_data = self.audio_data[sound_index[sound_index < len(self.audio_data)].astype(int)]
 
 	def set_echo(self, delay):
+		print('set echo')
 		'''Applies an echo that is 0...<input audio duration in seconds> seconds from the beginning'''
 		output_audio = np.zeros(len(self.audio_data))
 		output_delay = delay * self.sample_freq
@@ -65,6 +77,7 @@ class AudioProcessing(object):
 		self.audio_data = output_audio
 
 	def set_volume(self, level):
+		print('set volume')
 		'''Sets the overall volume of the data via floating-point factor'''
 		output_audio = np.zeros(len(self.audio_data))
 
@@ -74,10 +87,12 @@ class AudioProcessing(object):
 		self.audio_data = output_audio
 
 	def set_reverse(self):
+		print('set reverse')
 		'''Reverses the audio'''
 		self.audio_data = self.audio_data[::-1]
 
 	def set_audio_pitch(self, n, window_size=2**13, h=2**11):
+		print('set pitch')
 		'''Sets the pitch of the audio to a certain threshold'''
 		factor = 2 ** (1.0 * n / 12.0)
 		self._set_stretch(1.0 / factor, window_size, h)
@@ -85,6 +100,7 @@ class AudioProcessing(object):
 		self.set_audio_speed(factor)
 
 	def _set_stretch(self, factor, window_size, h):
+		print('stretch')
 		phase = np.zeros(window_size)
 		hanning_window = np.hanning(window_size)
 		result = np.zeros(int(len(self.audio_data) / factor + window_size))
@@ -107,9 +123,10 @@ class AudioProcessing(object):
 
 		# normalize (16bit)
 		result = ((2 ** (16 - 4)) * result/result.max())
-		self.audio_data = result.astype('int16')
+		self.audio_data = result#.astype('int16')
 
 	def set_lowpass(self, cutoff_low, order=5):
+		print('set lowpass')
 		'''Applies a low pass filter'''
 		nyquist = self.sample_freq / 2.0
 		cutoff = cutoff_low / nyquist
@@ -117,6 +134,7 @@ class AudioProcessing(object):
 		self.audio_data = signal.filtfilt(x, y, self.audio_data)
 
 	def set_highpass(self, cutoff_high, order=5):
+		print('set highpass')
 		'''Applies a high pass filter'''
 		nyquist = self.sample_freq / 2.0
 		cutoff = cutoff_high / nyquist
@@ -124,6 +142,7 @@ class AudioProcessing(object):
 		self.audio_data = signal.filtfilt(x, y, self.audio_data)
 
 	def set_bandpass(self, cutoff_low, cutoff_high, order=5):
+		print('set bandpass')
 		'''Applies a band pass filter'''
 		cutoff = np.zeros(2)
 		nyquist = self.sample_freq / 2.0
@@ -132,6 +151,13 @@ class AudioProcessing(object):
 		x, y = signal.butter(order, cutoff, btype='bandpass', analog=False)
 		self.audio_data = signal.filtfilt(x, y, self.audio_data)
 
+	def set_reverb(self, reverb_in='assets/Conic Long Echo Hall.wav', gain_dry=1, gain_wet=1, output_gain=0.05):
+		print('set reverb')
+		reverb = librosa.load(reverb_in, sr=44100)[0]
+		total_samples_sample = self.audio_data.shape[-1]
+		reverb_out = np.zeros([np.shape(self.audio_data)[0] + np.shape(reverb)[0] - 1], dtype = np.float64)
+		self.audio_data = output_gain * (convolve(self.audio_data * gain_dry, reverb * gain_wet, method = 'fft'))
+	
 	@staticmethod
 	def convert_to_mono_audio(input_audio):
 		'''Returns a numpy array that represents the mono version of a stereo input'''
@@ -141,4 +167,4 @@ class AudioProcessing(object):
 		for e in temp_audio:
 			output_audio.append((e[0] / 2) + (e[1] / 2))
 
-		return np.array(output_audio, dtype = 'int16')
+		return np.array(output_audio)
