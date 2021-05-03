@@ -7,7 +7,7 @@ Created on Apr 16 16:28:20 2021
 
 from AudioProcessing import AudioProcessing
 import numpy as np
-
+from utils import load_midi
 
 def set_effect(input_file, echo_en=True, reverb_en=False, low_pass_en=False, high_pass_en=False, \
                echo_rate=0.1, dry=1, wet=1, reverb_gain=0.05, lowpass_cutoff=250.0, highpass_cutoff=250.0,\
@@ -58,4 +58,18 @@ def mixing(vocal, guitar):
     
     return mix
     
+
+def vocal_synth(vocal, midi):
+    note, dur, pitch = load_midi(midi)
+
+    sound = np.empty(1)
+
+    for i in range(len(pitch)):
+        sound1 = AudioProcessing(vocal)
+        sound1.set_audio_pitch(pitch[i]-60)
+        synth = sound1.audio_data
+        synth = synth[:dur[i]*200]
+        #synth = np.append(np.zeros(dur[i]), synth)
+        sound = np.append(sound, synth)
     
+    return 

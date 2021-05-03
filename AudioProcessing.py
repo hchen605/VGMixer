@@ -105,3 +105,41 @@ class AudioProcessing(object):
 			output_audio.append((e[0] / 2) + (e[1] / 2))
 
 		return np.array(output_audio)
+
+    def set_audio_speed(self, speed_factor):
+		'''Sets the speed of the audio by a floating-point factor'''
+		sound_index = np.round(np.arange(0, len(self.audio_data), speed_factor))
+		self.audio_data = self.audio_data[sound_index[sound_index < len(self.audio_data)].astype(int)]
+        
+        
+    def set_audio_pitch(self, n, window_size=2**13, h=2**11):
+		'''Sets the pitch of the audio to a certain threshold'''
+		factor = 2 ** (1.0 * n / 12.0)
+		self._set_stretch(1.0 / factor, window_size, h)
+		self.audio_data = self.audio_data[window_size:]
+		self.set_audio_speed(factor)
+
+	def _set_stretch(self, factor, window_size, h):
+		phase = np.zeros(window_size)
+		hanning_window = np.hanning(window_size)
+		result = np.zeros(int(len(self.audio_data) / factor + window_size))
+
+		for i in np.arange(0, len(self.audio_data) - (window_size + h), h*factor):
+			# Two potentially overlapping subarrays
+			a1 = self.audio_data[int(i): int(i + window_size)]
+			a2 = self.audio_data[int(i + h): int(i + window_size + h)]
+
+			# The spectra of these arrays
+			s1 = np.fft.fft(hanning_window * a1)
+			s2 = np.fft.fft(hanning_window * a2)
+
+			# Rephase all frequencies
+			phase = (phase + np.angle(s2/s1)) % 2*np.pi
+
+			a2_rephased = np.fft.ifft(np.abs(s2)*np.exp(1j*phase))
+			i2 = int(i / factor)
+			result[i2: i2 + window_size] += hanning_window*a2_rephased.real
+
+		# normalize (16bit)
+		result = ((2 ** (16 - 4)) * result/result.max())
+		self.audio_data = result.astype('int16')       
