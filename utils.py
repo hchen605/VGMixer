@@ -25,5 +25,5 @@ def load_midi(midi_path):
     return note, dur, pitch
 
 
-def write_audio(oup_path, samplerate, audio):
-    sf.write(oup_path, audio, samplerate)
+def write_audio(oup_path, samplerate, audio, bit):
+    sf.write(oup_path, audio, samplerate, bit)

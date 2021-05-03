@@ -62,6 +62,7 @@ class ks(object):
     for i in range(length-1):
       self.__buffer()
       self.block = np.append(self.block, self.chunk)
+
     # convert the result from float to int
     self.__convert_to_int16()
     #print('Done. %s frames for total.' % self.total_len)
@@ -114,7 +115,7 @@ def chorus(data, freq=3, dry=0.5, wet=0.5, depth=1.0, delay=25.0, rate=44100):
     mil = float(rate) / 1000
     delay *= mil
     depth *= mil
-    modwave = (sine(freq, length) / 2 + 0.5) * depth + delay
+    modwave = (sine(freq, length, rate) / 2 + 0.5) * depth + delay
     return feedback_modulated_delay(data, modwave, dry, wet)
 
 
@@ -141,10 +142,10 @@ def synthesize_notes(note, dur, flanger_en=False, chorus_en=False, samplerate=44
         audio_tmp = k.block
     
         if flanger_en:
-            audio_tmp = flanger(audio_tmp, note[i])
+            audio_tmp = flanger(audio_tmp, note[i], rate=samplerate)
     
         if chorus_en:
-            audio_tmp = chorus(audio_tmp, note[i])
+            audio_tmp = chorus(audio_tmp, note[i], rate=samplerate)
     
         audio = np.append(audio, audio_tmp)
     return audio

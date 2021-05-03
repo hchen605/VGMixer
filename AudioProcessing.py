@@ -40,9 +40,9 @@ class AudioProcessing(object):
 
 	__slots__ = ('audio_data', 'sample_freq')
 
-	def __init__(self, input_audio=None):
+	def __init__(self, input_audio=None, sr=48000):
 		if type(input_audio) is str:
-			self.audio_data, self.sample_freq = librosa.load(input_audio, sr=44100)
+			self.audio_data, self.sample_freq = librosa.load(input_audio, sr=sr)
 		elif type(input_audio) is list:
 			self.sample_freq, self.audio_data = input_audio
 		else:
@@ -90,7 +90,7 @@ class AudioProcessing(object):
 
 	def set_reverb(self, reverb_in='assets/Conic Long Echo Hall.wav', gain_dry=1, gain_wet=1, output_gain=0.05):
 		print('set reverb')
-		reverb = librosa.load(reverb_in, sr=44100)[0]
+		reverb = librosa.load(reverb_in, sr=self.sample_freq)[0]
 		total_samples_sample = self.audio_data.shape[-1]
 		reverb_out = np.zeros([np.shape(self.audio_data)[0] + np.shape(reverb)[0] - 1], dtype = np.float64)
 		self.audio_data = output_gain * (convolve(self.audio_data * gain_dry, reverb * gain_wet, method = 'fft'))
@@ -106,13 +106,13 @@ class AudioProcessing(object):
 
 		return np.array(output_audio)
 
-    def set_audio_speed(self, speed_factor):
+	def set_audio_speed(self, speed_factor):
 		'''Sets the speed of the audio by a floating-point factor'''
 		sound_index = np.round(np.arange(0, len(self.audio_data), speed_factor))
 		self.audio_data = self.audio_data[sound_index[sound_index < len(self.audio_data)].astype(int)]
-        
-        
-    def set_audio_pitch(self, n, window_size=2**13, h=2**11):
+		
+		
+	def set_audio_pitch(self, n, window_size=2**13, h=2**11):
 		'''Sets the pitch of the audio to a certain threshold'''
 		factor = 2 ** (1.0 * n / 12.0)
 		self._set_stretch(1.0 / factor, window_size, h)
@@ -142,4 +142,4 @@ class AudioProcessing(object):
 
 		# normalize (16bit)
 		result = ((2 ** (16 - 4)) * result/result.max())
-		self.audio_data = result.astype('int16')       
+		self.audio_data = result.astype('int16')	   
