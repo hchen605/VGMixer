@@ -6,7 +6,6 @@ Created on Apr 16 16:28:20 2021
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.signal as ss
 import wave
 from scipy.io.wavfile import read 
@@ -41,16 +40,6 @@ class ks(object):
   def set_factor(self, f):
     self.factor = f
 
-  def generate_sine(self):
-    '''  used for test
-    '''
-    self.block = np.zeros(100000)
-    self.total_len = 100000
-    for i in range(100000):
-      self.block[i] = np.sin(i*0.02*np.pi)*0.5
-    self.__convert_to_int16()
-
-
   def __buffer(self):
     '''  The core of the class. Implementing the K-S Algorithm.
     '''
@@ -60,7 +49,6 @@ class ks(object):
         self.chunk[i] = (self.chunk[i-1] + self.chunk[i])*0.5
       else:
         self.chunk[i] = -(self.chunk[i-1] + self.chunk[i])*0.5
-
 
   def generator(self, length=500):
     '''  call the __buffer() function for several times to build a complete waveform.
@@ -79,112 +67,11 @@ class ks(object):
     #print('Done. %s frames for total.' % self.total_len)
     return self.block
 
-
   def __convert_to_int16(self):
     self.block = self.block*(2**16-1)
     self.block = self.block.astype(np.int16)
 
 
-  def save_to_file(self, fname):
-    '''  Save the generated waveform to a local file with the parameter fname.
-    '''
-    f = wave.open(fname, 'wb')
-    f.setnchannels(1)
-    f.setsampwidth(2)
-    f.setframerate(self.sample_rate)
-    f.writeframes(self.block)
-    f.close()
-
-
-  def __counter(self):
-    '''  A counter used in the audio callback function.
-    '''
-    c = 0
-    while True:
-      yield c
-      c = c + 1
-
-
-  def player_init(self):
-    '''  Prepare the data and get ready to play the sound.
-    '''
-    print('Initializing player...')
-    self.player_buffer = 1024
-    self.__player_counter = self.__counter()
-    align = self.total_len % self.player_buffer
-    align_data = np.zeros(self.player_buffer - align).astype(np.int16)
-    self.block = np.append(self.block, align_data)
-    self.__player_nbuffers = int(len(self.block) / self.player_buffer) - 1
-    self.__player_alldata = self.block.tobytes()
-    print('Done.')
-
-
-  def __scope_init(self):
-    self.__scope_fft_disp_range = int(self.player_buffer/2)
-    
-    self.__scope_x = np.arange(self.player_buffer)
-    self.__scope_fft_x = self.__scope_x[0:self.__scope_fft_disp_range]*(self.sample_rate/self.player_buffer)
-    
-    self.__scope_buffer = np.zeros(self.player_buffer)
-    self.__scope_fft = np.ones(self.player_buffer)[0:self.__scope_fft_disp_range]
-    
-    self.__scope_fig = plt.figure()
-    self.__scope_ax1 = plt.subplot(211)
-    self.__scope_ax2 = plt.subplot(212)
-    
-    self.__scope_line1, = self.__scope_ax1.plot(self.__scope_x,self.__scope_buffer)
-    self.__scope_line2, = self.__scope_ax2.plot(self.__scope_fft_x, self.__scope_fft)
-    
-    self.__scope_ax1.set_ylim(-(2**15), 2**15-1, auto=None)
-    self.__scope_ax2.set_yscale('log')
-    self.__scope_ax2.set_xscale('log')
-    self.__scope_ax2.set_ylim(1, (65535*self.player_buffer/2), auto=None)
-    
-    self.__scope_refresh = 1
-    
-    self.__scope_window = ss.hann(self.player_buffer, sym=False)
-    return 0
-
-
-  def __scope_refresh_buffer(self, n):
-    self.__scope_buffer = self.block[n*self.player_buffer:(n+1)*self.player_buffer]
-    self.__scope_buffer = self.__scope_buffer * self.__scope_window
-    self.__scope_fft = np.abs(np.fft.fft(self.__scope_buffer))[0:self.__scope_fft_disp_range]
-
-
-  def __scope_draw(self):
-    self.__scope_line1.set_ydata(self.__scope_buffer)
-    self.__scope_line2.set_ydata(self.__scope_fft)
-    self.__scope_fig.canvas.draw()
-    self.__scope_fig.canvas.flush_events()
-
-"""
-  def __player_callback(self, in_data, frame_count, time_info, status):
-    c = next(self.__player_counter)
-    rdata = self.__player_alldata[2*c*self.player_buffer:2*(c+1)*self.player_buffer]
-    
-    self.__scope_refresh_buffer(c)
-
-    if c<self.__player_nbuffers:
-      return(rdata, pyaudio.paContinue)
-    else:
-      self.__scope_refresh=0
-      return(rdata, pyaudio.paComplete)
-
-
-  def play(self):
-    self.player_init()
-    self.__scope_init()
-    p = pyaudio.PyAudio()
-    s = p.open(format = p.get_format_from_width(2), channels=1, rate=self.sample_rate, output=True, stream_callback=self.__player_callback)
-    s.start_stream()
-    while self.__scope_refresh:
-      self.__scope_draw()
-    s.stop_stream()
-    s.close()
-    p.terminate()
-    plt.close('all')
-"""
 def generate_wave_input(freq, length, rate=44100, phase=0.0):
     ''' Used by waveform generators to create frequency-scaled input array
 
@@ -259,9 +146,8 @@ def synthesize_notes(note, dur, flanger_en=True, chorus_en=True, samplerate=4410
         k = ks(samplerate, note[i])
 
         k.set_factor(1)
-        #  参数取值为0到1，产生不同音色。为0.5时为鼓音色，1时为拨弦音色
-        k.generator(dur[i]) #110 ~ 60bpm 1/8
-    
+        k.generator(dur[i]) 
+
         audio_tmp = k.block
     
         if flanger_en:

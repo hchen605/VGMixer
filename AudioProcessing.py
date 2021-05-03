@@ -10,23 +10,20 @@
 	# Read in WAV file into Python Class
 	sound1 = AudioProcessing('input.wav')
 
-	# Set the speed of the audio
-	sound1.set_audio_speed(0.5)
-
-	# Set the pitch of the audio
-	sound1.set_audio_pitch(2)
-
-	# Reverse the content of the audio
-	sound1.set_reverse()
-
 	# Add an echo to the audio
 	sound1.set_echo(1)
 
-	# Applies a bandpass filter between the (<low>, <high>) range of frequencies
-	sound.set_bandpass(50, 2600)
+	# Set audio volume
+	sound1.set_volume(1)
 
-	# Save the resulting processed audio data into a file
-	sound1.save_to_file('out.wav')
+	# Set lowpass filter
+	sound1.set_lowpass(250)
+
+	# Set highpass filter
+	sound1.set_highpass(250)
+
+	# Set reverb 
+	sound1.set_reverb()
 '''
 
 import sys, wave
@@ -54,17 +51,6 @@ class AudioProcessing(object):
 		if len(self.audio_data.shape) == 2:
 			self.audio_data = AudioProcessing.convert_to_mono_audio(self.audio_data)
 
-	def save_to_file(self, output_path):
-		print('save_file')
-		'''Writes a WAV file representation of the processed audio data'''
-		write(output_path, self.sample_freq, array(self.audio_data, dtype = int16))
-
-	def set_audio_speed(self, speed_factor):
-		print('set speed')
-		'''Sets the speed of the audio by a floating-point factor'''
-		sound_index = np.round(np.arange(0, len(self.audio_data), speed_factor))
-		self.audio_data = self.audio_data[sound_index[sound_index < len(self.audio_data)].astype(int)]
-
 	def set_echo(self, delay):
 		print('set echo')
 		'''Applies an echo that is 0...<input audio duration in seconds> seconds from the beginning'''
@@ -86,45 +72,6 @@ class AudioProcessing(object):
 
 		self.audio_data = output_audio
 
-	def set_reverse(self):
-		print('set reverse')
-		'''Reverses the audio'''
-		self.audio_data = self.audio_data[::-1]
-
-	def set_audio_pitch(self, n, window_size=2**13, h=2**11):
-		print('set pitch')
-		'''Sets the pitch of the audio to a certain threshold'''
-		factor = 2 ** (1.0 * n / 12.0)
-		self._set_stretch(1.0 / factor, window_size, h)
-		self.audio_data = self.audio_data[window_size:]
-		self.set_audio_speed(factor)
-
-	def _set_stretch(self, factor, window_size, h):
-		print('stretch')
-		phase = np.zeros(window_size)
-		hanning_window = np.hanning(window_size)
-		result = np.zeros(int(len(self.audio_data) / factor + window_size))
-
-		for i in np.arange(0, len(self.audio_data) - (window_size + h), h*factor):
-			# Two potentially overlapping subarrays
-			a1 = self.audio_data[int(i): int(i + window_size)]
-			a2 = self.audio_data[int(i + h): int(i + window_size + h)]
-
-			# The spectra of these arrays
-			s1 = np.fft.fft(hanning_window * a1)
-			s2 = np.fft.fft(hanning_window * a2)
-
-			# Rephase all frequencies
-			phase = (phase + np.angle(s2/s1)) % 2*np.pi
-
-			a2_rephased = np.fft.ifft(np.abs(s2)*np.exp(1j*phase))
-			i2 = int(i / factor)
-			result[i2: i2 + window_size] += hanning_window*a2_rephased.real
-
-		# normalize (16bit)
-		result = ((2 ** (16 - 4)) * result/result.max())
-		self.audio_data = result#.astype('int16')
-
 	def set_lowpass(self, cutoff_low, order=5):
 		print('set lowpass')
 		'''Applies a low pass filter'''
@@ -139,16 +86,6 @@ class AudioProcessing(object):
 		nyquist = self.sample_freq / 2.0
 		cutoff = cutoff_high / nyquist
 		x, y = signal.butter(order, cutoff, btype='highpass', analog=False)
-		self.audio_data = signal.filtfilt(x, y, self.audio_data)
-
-	def set_bandpass(self, cutoff_low, cutoff_high, order=5):
-		print('set bandpass')
-		'''Applies a band pass filter'''
-		cutoff = np.zeros(2)
-		nyquist = self.sample_freq / 2.0
-		cutoff[0] = cutoff_low / nyquist
-		cutoff[1] = cutoff_high / nyquist
-		x, y = signal.butter(order, cutoff, btype='bandpass', analog=False)
 		self.audio_data = signal.filtfilt(x, y, self.audio_data)
 
 	def set_reverb(self, reverb_in='assets/Conic Long Echo Hall.wav', gain_dry=1, gain_wet=1, output_gain=0.05):
