@@ -96,6 +96,15 @@ def sine(freq, length, rate=44100, phase=0.0):
 
     return np.sin(data)
 
+def modulated_delay(data, modwave, dry, wet):
+    ''' Use LFO "modwave" as a delay modulator (no feedback)
+    '''
+    out = data.copy()
+    for i in range(len(data)):
+        index = int(i - modwave[i])
+        if index >= 0 and index < len(data):
+            out[i] = data[i] * dry + data[index] * wet
+    return out
 
 def feedback_modulated_delay(data, modwave, dry, wet):
     ''' Use LFO "modwave" as a delay modulator (with feedback)
@@ -116,7 +125,7 @@ def chorus(data, freq=3, dry=0.5, wet=0.5, depth=1.0, delay=25.0, rate=44100):
     delay *= mil
     depth *= mil
     modwave = (sine(freq, length, rate) / 2 + 0.5) * depth + delay
-    return feedback_modulated_delay(data, modwave, dry, wet)
+    return modulated_delay(data, modwave, dry, wet)
 
 
 def flanger(data, freq=2, dry=0.5, wet=0.5, depth=20.0, delay=1.0, rate=44100):
