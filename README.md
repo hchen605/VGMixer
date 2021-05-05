@@ -37,8 +37,8 @@
 #### Guitar effect parameters
 - --flanger_en: enable flanger effect or not when synthesizing guitar (default is False)
 - --chorus_en: enable chorus effect or not when synthesizing guitar (default is False)
-- --flanger_delay: delay factor of flanger (default is 1)
-- --chorus_delay: delay factor of chorus (default is 25)
+- --flanger_freq: delay factor of flanger (default is 2)
+- --chorus_freq: delay factor of chorus (default is 3)
 - --gtr_echo_en: enable echo on guitar audio (default is False)
 - --gtr_reverb_en: enable reverb on guitar audio (default is False)
 - --gtr_lowpass_en: enable lowpass filter on guitar audio (default is False)
