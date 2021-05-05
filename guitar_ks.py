@@ -136,8 +136,7 @@ def flanger(data, freq=2, dry=0.5, wet=0.5, depth=20.0, delay=1.0, rate=44100):
     mil = float(rate) / 1000
     delay *= mil
     depth *= mil
-    modwave = (sine(freq, length) / 2 + 0.5) * depth + delay
-
+    modwave = (sine(freq, length, rate) / 2 + 0.5) * depth + delay
     return feedback_modulated_delay(data, modwave, dry, wet)
 
 def synthesize_notes(note, dur, flanger_en=False, chorus_en=False, samplerate=44100, flanger_delay=1.0, chorus_delay=25.0):
