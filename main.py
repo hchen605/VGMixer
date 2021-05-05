@@ -26,11 +26,11 @@ def main(args):
         raise 'Please enter either 24, 16 or 8 bit rate.'
     # midi synthesized branch
     note, dur, pitch = load_midi(args.midi_path)
-    guitar_sound = synthesize_notes(note, dur, args.flanger_en, args.chorus_en, args.sr)
+    guitar_sound = synthesize_notes(note, dur, args.flanger_en, args.chorus_en, args.sr, args.flanger_delay, args.chorus_delay)
     guitar_sound = set_effect([args.sr, guitar_sound.astype(np.float32, order='C') / 32768.0], \
                                args.gtr_echo_en, args.gtr_reverb_en, args.gtr_lowpass_en, args.gtr_highpass_en, \
                                args.gtr_echo, args.gtr_dry, args.gtr_wet, args.gtr_reverb_gain, args.gtr_lowpass_hz, args.gtr_highpass_hz,\
-                               args.gtr_volume, args.sr
+                               args.gtr_volume, args.sr, args.gtr_lowpass_order, args.gtr_lowpass_order
                                ).audio_data
                               
 
@@ -38,13 +38,13 @@ def main(args):
 
     # vocals branch
     if args.vc_use_midi:
-        vocal_sound = vocal_synth(args.vocals_path, args.midi_path, args.sr)
+        vocal_sound = vocal_synth('assets/c_2.wav', args.midi_path, args.sr)
     else:
         vocal_sound = args.vocals_path
     vocal_sound = set_effect(vocal_sound,\
                              args.vc_echo_en, args.vc_reverb_en, args.vc_lowpass_en, args.vc_highpass_en, \
                              args.vc_echo, args.vc_dry, args.vc_wet, args.vc_reverb_gain, args.vc_lowpass_hz, args.vc_highpass_hz, \
-                             args.vc_volume, args.sr
+                             args.vc_volume, args.sr, args.vc_lowpass_order, args.vc_lowpass_order
                              ).audio_data
     write_audio(args.vocal_oup_path, args.sr, vocal_sound, input_bit)
 
@@ -66,6 +66,8 @@ if __name__ == '__main__':
     # guitar synthesis
     parser.add_argument('--flanger_en', default=False, type=lambda x: (str(x).lower() == 'true'), help="Enable flanger")
     parser.add_argument('--chorus_en', default=False, type=lambda x: (str(x).lower() == 'true'), help="Enable chorus")
+    parser.add_argument("--flanger_delay", type=float, default=1, help="flanger delay")
+    parser.add_argument("--chorus_delay", type=float, default=25, help="chorus delay")
 
     # vocal effect
     parser.add_argument('--vc_use_midi', default=False, type=lambda x: (str(x).lower() == 'true'), help="Use midi to synth vocal. Default is directly using input vocal audio")
@@ -78,7 +80,9 @@ if __name__ == '__main__':
     parser.add_argument("--vc_wet", type=float, default=1.0, help="reverb wet")
     parser.add_argument("--vc_reverb_gain", type=float, default=0.1, help="reverb gain")
     parser.add_argument("--vc_lowpass_hz", type=float, default=250.0, help="cut off hz for lowpass filter")
+    parser.add_argument("--vc_lowpass_order", type=int, default=5, help="order of lowpass filter")
     parser.add_argument("--vc_highpass_hz", type=float, default=250.0, help="cut off hz for highpass filter")
+    parser.add_argument("--vc_highpass_order", type=int, default=5, help="order of highpass filter")
     parser.add_argument("--vc_volume", type=float, default=1.0, help="set mixing volume")
 
     # guitar effect
@@ -91,7 +95,9 @@ if __name__ == '__main__':
     parser.add_argument("--gtr_wet", type=float, default=1, help="reverb wet")
     parser.add_argument("--gtr_reverb_gain", type=float, default=0.1, help="reverb gain")
     parser.add_argument("--gtr_lowpass_hz", type=float, default=250, help="cut off hz for lowpass filter")
+    parser.add_argument("--gtr_lowpass_order", type=int, default=5, help="order of lowpass filter")
     parser.add_argument("--gtr_highpass_hz", type=float, default=250, help="cut off hz for highpass filter")
+    parser.add_argument("--gtr_highpass_order", type=int, default=5, help="order of highpass filter")
     parser.add_argument("--gtr_volume", type=float, default=1, help="set mixing volume")
 
     # vocal and guitar mixing

@@ -131,7 +131,7 @@ def flanger(data, freq=2, dry=0.5, wet=0.5, depth=20.0, delay=1.0, rate=44100):
 
     return feedback_modulated_delay(data, modwave, dry, wet)
 
-def synthesize_notes(note, dur, flanger_en=False, chorus_en=False, samplerate=44100):
+def synthesize_notes(note, dur, flanger_en=False, chorus_en=False, samplerate=44100, flanger_delay=1.0, chorus_delay=25.0):
     audio = np.empty(1)
     for i in range(len(note)):
         k = ks(samplerate, note[i])
@@ -142,10 +142,10 @@ def synthesize_notes(note, dur, flanger_en=False, chorus_en=False, samplerate=44
         audio_tmp = k.block
     
         if flanger_en:
-            audio_tmp = flanger(audio_tmp, note[i], rate=samplerate)
+            audio_tmp = flanger(audio_tmp, note[i], rate=samplerate, delay=flanger_delay)
     
         if chorus_en:
-            audio_tmp = chorus(audio_tmp, note[i], rate=samplerate)
+            audio_tmp = chorus(audio_tmp, note[i], rate=samplerate, delay=chorus_delay)
     
         audio = np.append(audio, audio_tmp)
     return audio

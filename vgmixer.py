@@ -11,7 +11,7 @@ from utils import load_midi
 
 def set_effect(input_file, echo_en=True, reverb_en=False, low_pass_en=False, high_pass_en=False, \
                echo_rate=0.1, dry=1, wet=1, reverb_gain=0.05, lowpass_cutoff=250.0, highpass_cutoff=250.0,\
-               mix_level=1, sr=48000):
+               mix_level=1, sr=48000, lowpass_order=5, highpass_order=5):
     '''  Add sound effect for input audio.
   
     Attributes:
@@ -33,10 +33,10 @@ def set_effect(input_file, echo_en=True, reverb_en=False, low_pass_en=False, hig
         sound1.set_echo(echo_rate)
         
     if low_pass_en:
-        sound1.set_lowpass(lowpass_cutoff) #cut off hz
+        sound1.set_lowpass(lowpass_cutoff, lowpass_order) #cut off hz
         
     if high_pass_en:
-        sound1.set_highpass(highpass_cutoff)    
+        sound1.set_highpass(highpass_cutoff, highpass_order)    
     
     if mix_level != 0:
         sound1.set_volume(mix_level)

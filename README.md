@@ -10,16 +10,16 @@
 ## Parameters description
 #### IO parameters
 - --midi_path: input midi path (default is assets/hb.mid)
-- --vocals_path: input vocal sound path (default is assets/vocal.wav)
+- --vocals_path: input vocal sound path. Can either be an synthesized sample or direct melody (default is assets/vocal.wav)
 - --mixing_en: enable guitar and vocal mixing (default is False)
 - --guitar_oup_path: path to save the synthesized guitar output (default is output/hb_guitar.wav)
 - --vocal_oup_path: path to save the vocal audio output (default is output/hb_vocal.wav)
 - --mix_oup_path: path to save the mixing output (default is output/hb_mix.wav)
+- --sr: sampling rate (default is 48000)
+- --bit: bit rate (default is 24)
 
 #### Vocal effect parameters
-- --flanger_en: enable flanger effect or not when synthesizing guitar (default is False)
-- --chorus_en: enable chorus effect or not when synthesizing guitar (default is False)
-- --sr: sampling rate when synthesizing guitar (default is 44100)
+- --vc_use_midi: use vocal sample to synthesize input midi, if not, then directly use the vocal for input (default if False)
 - --vc_echo_en: enable echo on vocal audio (default is False)
 - --vc_reverb_en: enable reverb on vocal audio (default is False)
 - --vc_lowpass_en: enable lowpass filter on vocal audio (default is False)
@@ -30,9 +30,15 @@
 - --vc_reverb_gain: gain for reverb on vocal audio (default is 0.1)
 - --vc_lowpass_hz: cutoff frequency for lowpass filter on vocal audio (default is 250)
 - --vc_highpass_hz: cutoff frequency for highpass filter on vocal audio (default is 250)
+- --vc_lowpass_order: order of lowpass filter (default is 5)
+- --vc_highpass_order: order of highpass filter (default is 5)
 - --vc_volume: mixing volume for vocal audio (default is 1)
 
 #### Guitar effect parameters
+- --flanger_en: enable flanger effect or not when synthesizing guitar (default is False)
+- --chorus_en: enable chorus effect or not when synthesizing guitar (default is False)
+- --flanger_delay: delay factor of flanger (default is 1)
+- --chorus_delay: delay factor of chorus (default is 25)
 - --gtr_echo_en: enable echo on guitar audio (default is False)
 - --gtr_reverb_en: enable reverb on guitar audio (default is False)
 - --gtr_lowpass_en: enable lowpass filter on guitar audio (default is False)
@@ -43,6 +49,8 @@
 - --gtr_reverb_gain: gain for reverb on guitar audio (default is 0.1)
 - --gtr_lowpass_hz: cutoff frequency for lowpass filter on guitar audio (default is 250)
 - --gtr_highpass_hz: cutoff frequency for highpass filter on guitar audio (default is 250)
+- --gtr_lowpass_order: order of lowpass filter (default is 5)
+- --gtr_highpass_order: order of highpass filter (default is 5)
 - --gtr_volume: mixing volume for guitar audio (default is 1)
 
 ## Basic usage 
